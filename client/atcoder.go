@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strings"
 
 	"github.com/remiposo/goj/model"
 )
@@ -23,6 +24,11 @@ type Atcoder struct {
 
 func NewAtcoder() (*Atcoder, error) {
 	return &Atcoder{Client: &http.Client{}}, nil
+}
+
+func normalizeText(raw string) string {
+	unescaped := html.UnescapeString(raw)
+	return strings.ReplaceAll(unescaped, "\r\n", "\n")
 }
 
 func (a *Atcoder) FetchSamples(href *url.URL) ([]*model.Sample, error) {
@@ -54,8 +60,8 @@ func (a *Atcoder) FetchSamples(href *url.URL) ([]*model.Sample, error) {
 	samples := make([]*model.Sample, len(inputs))
 	for idx := 0; idx < len(inputs); idx++ {
 		samples[idx] = &model.Sample{
-			Input:  html.UnescapeString(string(inputs[idx][1])),
-			Output: html.UnescapeString(string(outputs[idx][1])),
+			Input:  normalizeText(string(inputs[idx][1])),
+			Output: normalizeText(string(outputs[idx][1])),
 		}
 	}
 

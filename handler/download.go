@@ -53,8 +53,8 @@ func (h *Handler) Download(cCtx *cli.Context) error {
 	}
 	for idx, sample := range samples {
 		inputPath := filepath.Join(testDir, fmt.Sprintf("sample-%v.input", idx))
-		outputPath := filepath.Join(testDir, fmt.Sprintf("sample-%v.output", idx))
 		err := os.WriteFile(inputPath, []byte(sample.Input), 0644)
+		outputPath := filepath.Join(testDir, fmt.Sprintf("sample-%v.output", idx))
 		err = os.WriteFile(outputPath, []byte(sample.Output), 0644)
 		if err != nil {
 			return downloadErr(err)

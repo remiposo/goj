@@ -21,6 +21,13 @@ func main() {
 				Action:          h.Download,
 				HideHelpCommand: true,
 			},
+			{
+				Name:            "test",
+				Aliases:         []string{"t"},
+				Usage:           "test with samples",
+				Action:          h.Test,
+				HideHelpCommand: true,
+			},
 		},
 	}
 
