@@ -30,7 +30,7 @@ func (h *Handler) Create(cCtx *cli.Context) error {
 	if err := os.WriteFile(confPath, []byte{}, 0644); err != nil {
 		return createErr(fmt.Sprintf("failed to create '%s'", confPath))
 	}
-	fmt.Fprintf(cCtx.App.Writer, "created new project to '%v'\n", rootDir)
+	fmt.Fprintf(cCtx.App.Writer, "created new project in '%v'\n", rootDir)
 
 	return nil
 }
