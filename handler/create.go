@@ -12,7 +12,7 @@ func createErr(msg string) error {
 	return fmt.Errorf("failed to create project: %s", msg)
 }
 
-func (h *Handler) Create(cCtx *cli.Context) error {
+func Create(cCtx *cli.Context) error {
 	if cCtx.Args().Len() != 1 {
 		cli.ShowSubcommandHelp(cCtx)
 		fmt.Fprintln(cCtx.App.ErrWriter, "")

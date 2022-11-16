@@ -9,7 +9,6 @@ import (
 )
 
 func main() {
-	h := &handler.Handler{}
 	app := &cli.App{
 		Name:  "goj",
 		Usage: "simple/portable CLI tool for online judge sites",
@@ -18,19 +17,19 @@ func main() {
 				Name:    "create",
 				Aliases: []string{"c"},
 				Usage:   "create new goj project",
-				Action:  h.Create,
+				Action:  handler.Create,
 			},
 			{
 				Name:    "download",
 				Aliases: []string{"d"},
 				Usage:   "download samples",
-				Action:  h.Download,
+				Action:  handler.Download,
 			},
 			{
 				Name:    "test",
 				Aliases: []string{"t"},
 				Usage:   "test with samples",
-				Action:  h.Test,
+				Action:  handler.Test,
 			},
 		},
 	}

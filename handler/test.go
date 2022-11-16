@@ -17,7 +17,7 @@ func testErr(err error) error {
 	return fmt.Errorf("failed to test: %w", err)
 }
 
-func (h *Handler) Test(cCtx *cli.Context) error {
+func Test(cCtx *cli.Context) error {
 	if cCtx.Args().Len() == 0 {
 		cli.ShowSubcommandHelp(cCtx)
 		fmt.Fprintln(cCtx.App.ErrWriter, "")

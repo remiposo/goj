@@ -1,53 +1,43 @@
 package client
 
 import (
-	"errors"
-	"html"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"path"
 	"regexp"
-	"strings"
 
 	"github.com/remiposo/goj/model"
 )
 
-const (
-	AtcoderHost = "atcoder.jp"
-)
-
-var _ OJ = &Atcoder{}
+var _ Client = &Atcoder{}
 
 type Atcoder struct {
-	Client *http.Client
+	client *http.Client
 }
 
-func NewAtcoder() (*Atcoder, error) {
-	return &Atcoder{Client: &http.Client{}}, nil
-}
-
-func normalizeText(raw string) string {
-	unescaped := html.UnescapeString(raw)
-	return strings.ReplaceAll(unescaped, "\r\n", "\n")
-}
-
-func (a *Atcoder) FetchSamples(href *url.URL) ([]*model.Sample, error) {
-	if href.Host != AtcoderHost {
-		return nil, errors.New("invalid hostname")
+func NewAtcoder() *Atcoder {
+	return &Atcoder{
+		client: &http.Client{},
 	}
+}
 
-	req, err := http.NewRequest("GET", href.String(), nil)
+func (a *Atcoder) FetchSamples(contest, task string) ([]*model.Sample, error) {
+	u, _ := url.Parse("https://atcoder.jp")
+	u.Path = path.Join(u.Path, "contests", contest, "tasks", fmt.Sprintf("%s_%s", contest, task))
+	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
-		return nil, err
+		return nil, fetchSamplesErr("invalid request")
 	}
-	resp, err := a.Client.Do(req)
+	resp, err := a.client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fetchSamplesErr("failed to get response")
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fetchSamplesErr("failed to read response")
 	}
 
 	inputRg := regexp.MustCompile(`(?s)<h3>Sample Input.*?</h3><pre>(.*?)</pre>`)
@@ -55,13 +45,14 @@ func (a *Atcoder) FetchSamples(href *url.URL) ([]*model.Sample, error) {
 	inputs := inputRg.FindAllSubmatch(body, -1)
 	outputs := outputRg.FindAllSubmatch(body, -1)
 	if len(inputs) == 0 || len(inputs) != len(outputs) {
-		return nil, errors.New("samples not found")
+		return nil, fetchSamplesErr("sample not found")
 	}
+
 	samples := make([]*model.Sample, len(inputs))
 	for idx := 0; idx < len(inputs); idx++ {
 		samples[idx] = &model.Sample{
-			Input:  normalizeText(string(inputs[idx][1])),
-			Output: normalizeText(string(outputs[idx][1])),
+			Input:  normalizeHTMLText(string(inputs[idx][1])),
+			Output: normalizeHTMLText(string(outputs[idx][1])),
 		}
 	}
 

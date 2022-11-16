@@ -1,66 +1,64 @@
 package handler
 
 import (
-	"errors"
 	"fmt"
-	"net/url"
 	"os"
 	"path/filepath"
 
 	"github.com/remiposo/goj/client"
-	"github.com/remiposo/goj/model"
 	"github.com/urfave/cli/v2"
 )
 
-func downloadErr(err error) error {
-	return fmt.Errorf("failed to download sample: %w", err)
+func downloadErr(msg string) error {
+	return fmt.Errorf("failed to download sample: %s", msg)
 }
 
-func (h *Handler) Download(cCtx *cli.Context) error {
-	if cCtx.Args().Len() != 1 {
+func Download(cCtx *cli.Context) error {
+	if cCtx.Args().Len() != 3 {
 		cli.ShowSubcommandHelp(cCtx)
 		fmt.Fprintln(cCtx.App.ErrWriter, "")
-		return downloadErr(errors.New("invalid arg length"))
+		return downloadErr("invalid arg length")
 	}
+	service := cCtx.Args().Get(0)
+	contest := cCtx.Args().Get(1)
+	task := cCtx.Args().Get(2)
 
-	href, err := url.Parse(cCtx.Args().First())
+	rootDir, err := findRoot(".")
 	if err != nil {
-		return downloadErr(err)
+		return downloadErr(err.Error())
 	}
 
-	var samples []*model.Sample
-	switch href.Host {
-	case client.AtcoderHost:
-		h.OJ, err = client.NewAtcoder()
-		samples, err = h.OJ.FetchSamples(href)
-		if err != nil {
-			return downloadErr(err)
-		}
+	var c client.Client
+	switch service {
+	case "atcoder":
+		c = client.NewAtcoder()
 	default:
-		return downloadErr(errors.New("invalid hostname"))
+		return downloadErr("invalid service name")
 	}
 
-	curDir, err := os.Getwd()
+	samples, err := c.FetchSamples(contest, task)
 	if err != nil {
-		return downloadErr(err)
+		return downloadErr(err.Error())
 	}
-	testDir := filepath.Join(curDir, "test")
+	testDir := filepath.Join(rootDir, service, contest, task, "test")
 	if _, err := os.Stat(testDir); err == nil {
-		return downloadErr(fmt.Errorf("'%v' already exists", testDir))
+		return downloadErr(fmt.Sprintf("'%s' already exists", testDir))
 	}
 	if err := os.MkdirAll(testDir, 0755); err != nil {
-		return downloadErr(err)
+		return downloadErr(fmt.Sprintf("failed to create '%s'", testDir))
 	}
+
 	for idx, sample := range samples {
 		inputPath := filepath.Join(testDir, fmt.Sprintf("sample-%v.input", idx))
-		err := os.WriteFile(inputPath, []byte(sample.Input), 0644)
+		if err := os.WriteFile(inputPath, []byte(sample.Input), 0644); err != nil {
+			return downloadErr(fmt.Sprintf("failed to create '%s'", inputPath))
+		}
 		outputPath := filepath.Join(testDir, fmt.Sprintf("sample-%v.output", idx))
-		err = os.WriteFile(outputPath, []byte(sample.Output), 0644)
-		if err != nil {
-			return downloadErr(err)
+		if err := os.WriteFile(outputPath, []byte(sample.Output), 0644); err != nil {
+			return downloadErr(fmt.Sprintf("failed to create '%s'", inputPath))
 		}
 	}
-	fmt.Fprintf(cCtx.App.Writer, "successfully downloaded samples to '%v'\n", testDir)
+	fmt.Fprintf(cCtx.App.Writer, "downloaded samples in '%s'\n", testDir)
 
 	return nil
 }
