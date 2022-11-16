@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"os"
 
 	"github.com/remiposo/goj/handler"
@@ -36,6 +36,7 @@ func main() {
 	}
 
 	if err := app.Run(os.Args); err != nil {
-		log.Fatalln(err)
+		fmt.Fprintln(app.ErrWriter, err)
+		os.Exit(1)
 	}
 }
