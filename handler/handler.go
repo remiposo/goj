@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 )
 
+const testDir = "test"
 const confFile = "goj.yml"
 
 func findRoot(curDir string) (string, error) {
