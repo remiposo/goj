@@ -2,7 +2,6 @@ package handler
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -13,20 +12,20 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func testErr(err error) error {
-	return fmt.Errorf("failed to test: %w", err)
+func testErr(msg string) error {
+	return fmt.Errorf("failed to test sample: %s", msg)
 }
 
 func Test(cCtx *cli.Context) error {
 	if cCtx.Args().Len() == 0 {
 		cli.ShowSubcommandHelp(cCtx)
 		fmt.Fprintln(cCtx.App.ErrWriter, "")
-		return testErr(errors.New("invalid arg length"))
+		return testErr("invalid arg length")
 	}
 
 	entries, err := os.ReadDir("test")
 	if err != nil {
-		return testErr(err)
+		return testErr("test dir not found")
 	}
 	samples := make(map[string]*model.Sample)
 	for _, entry := range entries {
@@ -37,9 +36,10 @@ func Test(cCtx *cli.Context) error {
 			continue
 		}
 
-		body, err := os.ReadFile(filepath.Join("test", baseName))
+		samplePath := filepath.Join("test", baseName)
+		body, err := os.ReadFile(samplePath)
 		if err != nil {
-			return testErr(err)
+			return testErr(fmt.Sprintf("failed to read `%s`", samplePath))
 		}
 		sample, ok := samples[string(matches[1])]
 		if !ok {
